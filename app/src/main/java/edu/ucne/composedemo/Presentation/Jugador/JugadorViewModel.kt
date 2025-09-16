@@ -1,7 +1,7 @@
 package edu.ucne.composedemo.Presentation.Jugador
 
 import androidx.lifecycle.ViewModel
-import edu.ucne.composedemo.Domain.useCase.JugadorUseCases
+import edu.ucne.composedemo.Domain.useCase.UseCaseJugador.JugadorUseCases
 import edu.ucne.composedemo.Domain.Model.Jugador
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
