@@ -18,7 +18,8 @@ import kotlinx.coroutines.launch
 fun JugadorScreen(
     jugadorId: Int?,
     viewModel: JugadorViewModel = hiltViewModel(),
-    goback: () -> Unit
+    goback: () -> Unit,
+    id: Int?
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
