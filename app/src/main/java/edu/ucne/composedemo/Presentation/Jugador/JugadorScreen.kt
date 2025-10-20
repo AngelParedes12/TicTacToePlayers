@@ -30,8 +30,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import edu.ucne.jugadorestictactoe.Presentation.Jugador.JugadorEvent
-import edu.ucne.jugadorestictactoe.Presentation.Jugador.JugadorViewModel
 import kotlinx.coroutines.launch
 
 @Composable
