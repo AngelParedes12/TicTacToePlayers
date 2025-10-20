@@ -1,7 +1,6 @@
-package edu.ucne.composedemo.Presentation.Jugador
+package edu.ucne.jugadorestictactoe.Presentation.Jugador
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -34,16 +33,17 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import edu.ucne.composedemo.Domain.Model.Jugador
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Column
 
 @Composable
 fun JugadorListScreen(
     viewModel: JugadorViewModel = hiltViewModel(),
     goToJugadores: (Int) -> Unit,
     createJugador: () -> Unit
-){
+) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
-
 
     LaunchedEffect(state.errorMessage) {
         state.errorMessage?.takeIf { it.isNotEmpty() }?.let { message ->
@@ -87,7 +87,7 @@ fun JugadorCardItem(
     jugador: Jugador,
     goToJugador: () -> Unit,
     deleteJugador: () -> Unit
-){
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -100,7 +100,11 @@ fun JugadorCardItem(
                 .padding(vertical = 16.dp)
                 .fillMaxWidth()
         ) {
-            Column(modifier = Modifier.weight(1f).padding(start = 8.dp)) {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = 8.dp)
+            ) {
                 Text(text = "Id: ${jugador.id}", fontWeight = FontWeight.Bold)
                 Text(text = jugador.nombre, fontSize = 14.sp)
                 Text(text = "${jugador.partidas} Partidas jugadas")
@@ -116,4 +120,3 @@ fun JugadorCardItem(
         }
     }
 }
-

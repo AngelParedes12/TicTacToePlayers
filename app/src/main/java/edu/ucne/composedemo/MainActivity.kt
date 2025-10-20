@@ -1,48 +1,55 @@
-
-package edu.ucne.composedemo
+package edu.ucne.jugadorestictactoe
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import edu.ucne.composedemo.ui.theme.TicTacToePlayersTheme
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.navigation.NavType
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import edu.ucne.jugadorestictactoe.Presentation.Jugador.JugadorListScreen
+import edu.ucne.jugadorestictactoe.Presentation.Jugador.JugadorScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         setContent {
-            TicTacToePlayersTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
+            MaterialTheme {
+                Surface {
+                    val navController = rememberNavController()
+
+                    NavHost(
+                        navController = navController,
+                        startDestination = "jugadores"
+                    ) {
+                        composable("jugadores") {
+                            JugadorListScreen(
+                                goToJugadores = { id ->
+                                    navController.navigate("jugador/$id")
+                                },
+                                createJugador = {
+                                    navController.navigate("jugador/0")
+                                }
+                            )
+                        }
+                        composable(
+                            route = "jugador/{jugadorId}",
+                            arguments = listOf(
+                                navArgument("jugadorId") { type = NavType.IntType }
+                            )
+                        ) { backStackEntry ->
+                            val jugadorId = backStackEntry.arguments?.getInt("jugadorId")
+                            JugadorScreen(
+                                jugadorId = jugadorId,
+                                goback = { navController.popBackStack() }
+                            )
+                        }
+                    }
                 }
             }
         }
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    TicTacToePlayersTheme {
-        Greeting("Android")
     }
 }

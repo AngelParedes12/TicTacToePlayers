@@ -1,13 +1,31 @@
-package edu.ucne.composedemo.Presentation.Jugador
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.material.MaterialTheme.colors
+package edu.ucne.jugadorestictactoe.Presentation.Jugador
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -20,10 +38,10 @@ fun JugadorScreen(
     viewModel: JugadorViewModel = hiltViewModel(),
     goback: () -> Unit
 ) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val uiState = viewModel.uiState.collectAsStateWithLifecycle().value
     val scope = rememberCoroutineScope()
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(jugadorId) {
         jugadorId?.takeIf { it > 0 }?.let {
             viewModel.findJugador(it)
         }
@@ -41,7 +59,6 @@ fun JugadorScreen(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun JugadorBodyScreen(
     uiState: JugadorUiState,
@@ -56,10 +73,7 @@ fun JugadorBodyScreen(
             TopAppBar(
                 title = {
                     Text(
-                        if (uiState.jugadorId != null && uiState.jugadorId != 0)
-                            "Editar Jugador"
-                        else
-                            "Nuevo Jugador"
+                        if (uiState.jugadorId != null && uiState.jugadorId != 0) "Editar Jugador" else "Nuevo Jugador"
                     )
                 },
                 navigationIcon = {
@@ -87,7 +101,7 @@ fun JugadorBodyScreen(
 
             OutlinedTextField(
                 value = uiState.nombres,
-                onValueChange = { onAction(JugadorEvent.NombreChange(it)) },
+                onValueChange = { value -> onAction(JugadorEvent.NombreChange(value)) },
                 label = { Text("Nombre:") },
                 modifier = Modifier.fillMaxWidth(),
                 isError = !uiState.errorMessage.isNullOrEmpty()
@@ -96,8 +110,8 @@ fun JugadorBodyScreen(
 
             OutlinedTextField(
                 value = uiState.partidas.toString(),
-                onValueChange = {
-                    val partidas = it.toIntOrNull() ?: 0
+                onValueChange = { value ->
+                    val partidas = value.toIntOrNull() ?: 0
                     onAction(JugadorEvent.PartidaChange(partidas))
                 },
                 label = { Text("Partidas") },
@@ -105,8 +119,8 @@ fun JugadorBodyScreen(
                 isError = !uiState.errorMessage.isNullOrEmpty()
             )
 
-            uiState.errorMessage?.takeIf { it.isNotEmpty() }?.let {
-                Text(text = it, color = colors.error)
+            uiState.errorMessage?.takeIf { it.isNotEmpty() }?.let { msg ->
+                Text(text = msg, color = MaterialTheme.colorScheme.error)
             }
 
             Spacer(Modifier.weight(1f))

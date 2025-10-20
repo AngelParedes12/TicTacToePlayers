@@ -1,6 +1,6 @@
 package edu.ucne.composedemo.Data.mappers
 
-import edu.ucne.composedemo.Data.Local.Entities.JugadorEntity
+import edu.ucne.composedemo.Data.Local.Jugador.Entities.JugadorEntity
 import edu.ucne.composedemo.Domain.Model.Jugador
 
 fun JugadorEntity.toDomain() = Jugador(

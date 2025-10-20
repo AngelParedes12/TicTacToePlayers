@@ -1,13 +1,13 @@
-package edu.ucne.composedemo.Presentation.Jugador
+package edu.ucne.jugadorestictactoe.Presentation.Jugador
 
 import edu.ucne.composedemo.Domain.Model.Jugador
 
-data class JugadorUiState (
+data class JugadorUiState(
     val jugadorId: Int? = null,
     val nombres: String = "",
     val partidas: Int = 0,
-    val errorMessage: String? = null,
-    val jugadores: List<Jugador> = emptyList()
+    val jugadores: List<Jugador> = emptyList(),
+    val errorMessage: String? = null
 ) {
     companion object {
         fun default() = JugadorUiState()

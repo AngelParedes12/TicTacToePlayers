@@ -1,7 +1,8 @@
-package edu.ucne.composedemo.Presentation.Jugador
+package edu.ucne.jugadorestictactoe.Presentation.Jugador
+
 
 import androidx.lifecycle.ViewModel
-import edu.ucne.composedemo.Domain.useCase.JugadorUseCases
+import edu.ucne.composedemo.Domain.useCase.UseCaseJugador.JugadorUseCases
 import edu.ucne.composedemo.Domain.Model.Jugador
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -15,7 +16,7 @@ import javax.inject.Inject
 @HiltViewModel
 class JugadorViewModel @Inject constructor(
     private val useCases: JugadorUseCases
-): ViewModel() {
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(JugadorUiState.default())
     val uiState = _uiState.asStateFlow()
@@ -24,8 +25,8 @@ class JugadorViewModel @Inject constructor(
         getJugadores()
     }
 
-    fun onEvent(event: JugadorEvent){
-        when(event){
+    fun onEvent(event: JugadorEvent) {
+        when (event) {
             is JugadorEvent.NombreChange -> onNombresChange(event.nombres)
             is JugadorEvent.JugadorChange -> onJugadorChange(event.jugadorId)
             is JugadorEvent.PartidaChange -> onPartidasChange(event.partidas)
@@ -51,7 +52,6 @@ class JugadorViewModel @Inject constructor(
         }
     }
 
-
     fun findJugador(jugadorId: Int) {
         viewModelScope.launch {
             if (jugadorId > 0) {
@@ -71,7 +71,6 @@ class JugadorViewModel @Inject constructor(
         }
     }
 
-
     suspend fun saveJugador(): Boolean {
         val currentState = _uiState.value
         val jugador = Jugador(
@@ -87,7 +86,6 @@ class JugadorViewModel @Inject constructor(
             false
         }
     }
-
 
     private fun deleteJugador() {
         viewModelScope.launch {
@@ -105,16 +103,15 @@ class JugadorViewModel @Inject constructor(
         }
     }
 
-
-    private fun onPartidasChange(partidas: Int){
+    private fun onPartidasChange(partidas: Int) {
         _uiState.update { it.copy(partidas = partidas) }
     }
 
-    private fun onNombresChange(nombres: String){
+    private fun onNombresChange(nombres: String) {
         _uiState.update { it.copy(nombres = nombres) }
     }
 
-    private fun onJugadorChange(jugadorId: Int){
+    private fun onJugadorChange(jugadorId: Int) {
         _uiState.update { it.copy(jugadorId = jugadorId) }
     }
 
