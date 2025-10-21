@@ -12,8 +12,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Icon
@@ -35,6 +35,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import edu.ucne.composedemo.Presentation.Game.GameOutcome
+import edu.ucne.composedemo.Presentation.Game.GameResultScreen
+import edu.ucne.composedemo.Presentation.Game.detectOutcome
 
 @Composable
 fun JugadorScreen(
@@ -48,41 +51,53 @@ fun JugadorScreen(
         viewModel.load()
     }
 
-    Column(
+    val outcome = remember(gameState.board) { detectOutcome(gameState.board) }
+
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 20.dp, vertical = 24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Top
+            .padding(horizontal = 20.dp, vertical = 16.dp),
+        contentAlignment = Alignment.Center
     ) {
-        PartidaSelector(
-            currentPartidaId = gameState.partidaId,
-            onPartidaChange = { id ->
-                viewModel.setPartida(id)
-                viewModel.load()
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(18.dp)
+        ) {
+            PartidaSelector(
+                currentPartidaId = gameState.partidaId,
+                onPartidaChange = { id ->
+                    viewModel.setPartida(id)
+                    viewModel.load()
+                }
+            )
+
+            TurnIndicator(turn = gameState.turn)
+
+            GameBoard(
+                board = gameState.board,
+                loading = gameState.loading,
+                onCellClick = { row, column ->
+                    viewModel.play(row, column)
+                }
+            )
+
+            gameState.error?.let { error ->
+                Text(
+                    text = error,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodyMedium
+                )
             }
-        )
+        }
 
-        Spacer(Modifier.height(20.dp))
-
-        TurnIndicator(turn = gameState.turn)
-
-        Spacer(Modifier.height(16.dp))
-
-        GameBoard(
-            board = gameState.board,
-            loading = gameState.loading,
-            onCellClick = { row, column ->
-                viewModel.play(row, column)
-            }
-        )
-
-        gameState.error?.let { error ->
-            Spacer(Modifier.height(20.dp))
-            Text(
-                text = error,
-                color = MaterialTheme.colorScheme.error,
-                style = MaterialTheme.typography.bodyMedium
+        if (outcome != null) {
+            GameResultScreen(
+                outcome = outcome,
+                partidaId = gameState.partidaId,
+                onPlayAgain = { viewModel.load() },
+                onNewPartida = {},
+                onBackToList = {}
             )
         }
     }
@@ -94,7 +109,7 @@ private fun PartidaSelector(
     onPartidaChange: (Int) -> Unit
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth(0.9f),
+        modifier = Modifier.fillMaxWidth(0.92f),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
