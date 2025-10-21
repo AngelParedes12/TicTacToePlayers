@@ -1,5 +1,6 @@
 package edu.ucne.composedemo.Presentation.Jugador
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -40,10 +41,9 @@ fun JugadorListScreen(
     viewModel: JugadorViewModel = hiltViewModel(),
     goToJugadores: (Int) -> Unit,
     createJugador: () -> Unit
-){
+) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
-
 
     LaunchedEffect(state.errorMessage) {
         state.errorMessage?.takeIf { it.isNotEmpty() }?.let { message ->
@@ -54,21 +54,22 @@ fun JugadorListScreen(
 
     val onDelete: (Jugador) -> Unit = { jugador ->
         viewModel.onEvent(JugadorEvent.JugadorChange(jugador.id ?: 0))
-        viewModel.onEvent(JugadorEvent.delete)
+        viewModel.onEvent(JugadorEvent.Delete)
     }
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
             FloatingActionButton(onClick = createJugador) {
-                Icon(Icons.Filled.Add, contentDescription = "Agregar jugador")
+                Icon(Icons.Filled.Add, contentDescription = null)
             }
         }
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier
                 .padding(paddingValues)
-                .padding(16.dp)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             items(state.jugadores) { jugador ->
                 JugadorCardItem(
@@ -76,7 +77,6 @@ fun JugadorListScreen(
                     goToJugador = { goToJugadores(jugador.id ?: 0) },
                     deleteJugador = { onDelete(jugador) }
                 )
-                Spacer(modifier = Modifier.height(8.dp))
             }
         }
     }
@@ -87,7 +87,7 @@ fun JugadorCardItem(
     jugador: Jugador,
     goToJugador: () -> Unit,
     deleteJugador: () -> Unit
-){
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -107,13 +107,12 @@ fun JugadorCardItem(
             }
             Spacer(modifier = Modifier.width(8.dp))
             IconButton(onClick = goToJugador) {
-                Icon(Icons.Default.Edit, contentDescription = "Editar")
+                Icon(Icons.Filled.Edit, contentDescription = null)
             }
             Spacer(modifier = Modifier.width(8.dp))
             IconButton(onClick = deleteJugador) {
-                Icon(Icons.Default.Delete, contentDescription = "Eliminar")
+                Icon(Icons.Filled.Delete, contentDescription = null)
             }
         }
     }
 }
-
