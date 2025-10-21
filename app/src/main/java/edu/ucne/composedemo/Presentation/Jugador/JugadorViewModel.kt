@@ -6,11 +6,11 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import edu.ucne.composedemo.Data.Remote.dto.MovimientoPostDto
 import edu.ucne.composedemo.Domain.Model.Jugador
 import edu.ucne.composedemo.Domain.Repository.MovimientosRepository
-import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
+import javax.inject.Inject
 
 data class JugadorUiState(
     val jugadores: List<Jugador> = emptyList(),
@@ -33,68 +33,112 @@ class JugadorViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(JugadorUiState())
     val uiState: StateFlow<JugadorUiState> = _uiState
 
-    private val _ui = MutableStateFlow(GameUiState())
-    val ui: StateFlow<GameUiState> = _ui
+    private val _gameState = MutableStateFlow(GameUiState())
+    val gameState: StateFlow<GameUiState> = _gameState
 
     fun setPartida(id: Int) {
-        _ui.value = _ui.value.copy(partidaId = id)
+        _gameState.value = _gameState.value.copy(partidaId = id)
     }
 
     fun clearError() {
-        _ui.value = _ui.value.copy(error = null)
+        _gameState.value = _gameState.value.copy(error = null)
         _uiState.value = _uiState.value.copy(errorMessage = null)
     }
 
     fun load() {
         viewModelScope.launch {
             try {
-                _ui.value = _ui.value.copy(loading = true, error = null)
-                val moves = movimientosRepo.getByPartida(_ui.value.partidaId)
-                val b = List(3) { MutableList(3) { "" } }
-                var last = ""
-                for (m in moves) {
-                    if (m.posicionFila in 0..2 && m.posicionColumna in 0..2) {
-                        b[m.posicionFila][m.posicionColumna] = m.jugador
-                        last = m.jugador
+                _gameState.value = _gameState.value.copy(
+                    loading = true,
+                    error = null
+                )
+
+                val moves = movimientosRepo.getByPartida(_gameState.value.partidaId)
+                val board = List(3) { MutableList(3) { "" } }
+                var lastPlayer = ""
+
+                for (move in moves) {
+                    if (move.posicionFila in 0..2 && move.posicionColumna in 0..2) {
+                        board[move.posicionFila][move.posicionColumna] = move.jugador
+                        lastPlayer = move.jugador
                     }
                 }
-                val next = if (last == "X") "O" else "X"
-                _ui.value = _ui.value.copy(
-                    board = b.map { it.toList() },
-                    turn = next,
+
+                val nextTurn = if (lastPlayer == "X") "O" else "X"
+
+                _gameState.value = _gameState.value.copy(
+                    board = board.map { it.toList() },
+                    turn = nextTurn,
                     loading = false,
                     error = null
                 )
             } catch (e: HttpException) {
-                val msg = if (e.code() == 404) "Partida ${_ui.value.partidaId} no encontrada" else "HTTP ${e.code()} ${e.message()}"
-                _ui.value = _ui.value.copy(loading = false, error = msg)
+                val errorMessage = if (e.code() == 404) {
+                    "Partida ${_gameState.value.partidaId} no encontrada"
+                } else {
+                    "HTTP ${e.code()} ${e.message()}"
+                }
+                _gameState.value = _gameState.value.copy(
+                    loading = false,
+                    error = errorMessage
+                )
             } catch (e: Exception) {
-                _ui.value = _ui.value.copy(loading = false, error = e.message ?: "Error")
+                _gameState.value = _gameState.value.copy(
+                    loading = false,
+                    error = e.message ?: "Error desconocido"
+                )
             }
         }
     }
 
-    fun play(r: Int, c: Int) {
-        val symbol = _ui.value.turn
-        if (r !in 0..2 || c !in 0..2 || _ui.value.board[r][c].isNotEmpty()) return
+    fun play(row: Int, column: Int) {
+        val symbol = _gameState.value.turn
+        val currentBoard = _gameState.value.board
+
+        if (row !in 0..2 || column !in 0..2 || currentBoard[row][column].isNotEmpty()) {
+            return
+        }
+
         viewModelScope.launch {
             try {
-                _ui.value = _ui.value.copy(loading = true, error = null)
-                movimientosRepo.post(MovimientoPostDto(_ui.value.partidaId, symbol, r, c))
+                _gameState.value = _gameState.value.copy(
+                    loading = true,
+                    error = null
+                )
+
+                movimientosRepo.post(
+                    MovimientoPostDto(
+                        partidaId = _gameState.value.partidaId,
+                        jugador = symbol,
+                        posicionFila = row,
+                        posicionColumna = column
+                    )
+                )
                 load()
             } catch (e: HttpException) {
-                val msg = if (e.code() == 404) "Partida ${_ui.value.partidaId} no encontrada" else "HTTP ${e.code()} ${e.message()}"
-                _ui.value = _ui.value.copy(loading = false, error = msg)
+                val errorMessage = if (e.code() == 404) {
+                    "Partida ${_gameState.value.partidaId} no encontrada"
+                } else {
+                    "HTTP ${e.code()} ${e.message()}"
+                }
+                _gameState.value = _gameState.value.copy(
+                    loading = false,
+                    error = errorMessage
+                )
             } catch (e: Exception) {
-                _ui.value = _ui.value.copy(loading = false, error = e.message ?: "Error")
+                _gameState.value = _gameState.value.copy(
+                    loading = false,
+                    error = e.message ?: "Error desconocido"
+                )
             }
         }
     }
 
     fun onEvent(event: JugadorEvent) {
         when (event) {
-            is JugadorEvent.JugadorChange -> {}
-            JugadorEvent.Delete -> {}
+            is JugadorEvent.JugadorChange -> { /* Implementar lógica */ }
+            JugadorEvent.Delete -> { /* Implementar lógica */ }
+
         }
     }
 }
