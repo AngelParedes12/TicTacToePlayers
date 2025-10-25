@@ -1,148 +1,158 @@
-@file:OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
-
-package edu.ucne.jugadorestictactoe.Presentation.Jugador
+package edu.ucne.composedemo.Presentation.Jugador
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Divider
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import kotlinx.coroutines.launch
+import edu.ucne.composedemo.Domain.Model.Jugador
 
 @Composable
 fun JugadorScreen(
-    jugadorId: Int?,
-    viewModel: JugadorViewModel = hiltViewModel(),
-    goback: () -> Unit
+    viewModel: JugadorViewModel = hiltViewModel()
 ) {
-    val uiState = viewModel.uiState.collectAsStateWithLifecycle().value
-    val scope = rememberCoroutineScope()
+    val state by viewModel.state.collectAsStateWithLifecycle()
+    val snackbar = remember { SnackbarHostState() }
 
-    LaunchedEffect(jugadorId) {
-        jugadorId?.takeIf { it > 0 }?.let {
-            viewModel.findJugador(it)
+    LaunchedEffect(state.message) {
+        val m = state.message
+        if (m != null) {
+            snackbar.showSnackbar(m)
         }
     }
 
-    JugadorBodyScreen(
-        uiState = uiState,
-        onAction = viewModel::onEvent,
-        goback = goback,
-        saveJugador = {
-            scope.launch {
-                if (viewModel.saveJugador()) goback()
-            }
-        }
-    )
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbar) }
+    ) { padding ->
+        JugadorBody(
+            paddingValues = padding,
+            state = state,
+            onNameChange = { viewModel.onEvent(JugadorEvent.NombresChanged(it)) },
+            onEmailChange = { viewModel.onEvent(JugadorEvent.EmailChanged(it)) },
+            onGuardar = { viewModel.onEvent(JugadorEvent.Submit) },
+            onSync = { viewModel.onEvent(JugadorEvent.Sync) },
+            loading = state.isLoading
+        )
+    }
 }
 
 @Composable
-fun JugadorBodyScreen(
-    uiState: JugadorUiState,
-    onAction: (JugadorEvent) -> Unit,
-    goback: () -> Unit,
-    saveJugador: suspend () -> Unit
+private fun JugadorBody(
+    paddingValues: PaddingValues,
+    state: JugadorUiState,
+    onNameChange: (String) -> Unit,
+    onEmailChange: (String) -> Unit,
+    onGuardar: () -> Unit,
+    onSync: () -> Unit,
+    loading: Boolean
 ) {
-    val scope = rememberCoroutineScope()
-
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        if (uiState.jugadorId != null && uiState.jugadorId != 0) "Editar Jugador" else "Nuevo Jugador"
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = goback) {
-                        Icon(Icons.Default.ArrowBack, "Volver")
-                    }
-                }
-            )
-        }
-    ) { padding ->
+    Column(
+        modifier = Modifier
+            .padding(paddingValues)
+            .padding(16.dp)
+            .fillMaxSize()
+            .navigationBarsPadding(),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
         Column(
-            modifier = Modifier
-                .padding(padding)
-                .fillMaxSize()
-                .padding(16.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             OutlinedTextField(
-                value = uiState.jugadorId?.toString() ?: "0",
-                onValueChange = {},
-                label = { Text("Id:") },
+                value = state.nombres,
+                onValueChange = onNameChange,
+                label = { Text("Nombre") },
                 modifier = Modifier.fillMaxWidth(),
-                enabled = false
+                singleLine = true
             )
-            Spacer(Modifier.height(16.dp))
-
             OutlinedTextField(
-                value = uiState.nombres,
-                onValueChange = { value -> onAction(JugadorEvent.NombreChange(value)) },
-                label = { Text("Nombre:") },
+                value = state.email,
+                onValueChange = onEmailChange,
+                label = { Text("Email") },
                 modifier = Modifier.fillMaxWidth(),
-                isError = !uiState.errorMessage.isNullOrEmpty()
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
             )
-            Spacer(Modifier.height(16.dp))
-
-            OutlinedTextField(
-                value = uiState.partidas.toString(),
-                onValueChange = { value ->
-                    val partidas = value.toIntOrNull() ?: 0
-                    onAction(JugadorEvent.PartidaChange(partidas))
-                },
-                label = { Text("Partidas") },
-                modifier = Modifier.fillMaxWidth(),
-                isError = !uiState.errorMessage.isNullOrEmpty()
-            )
-
-            uiState.errorMessage?.takeIf { it.isNotEmpty() }?.let { msg ->
-                Text(text = msg, color = MaterialTheme.colorScheme.error)
-            }
-
-            Spacer(Modifier.weight(1f))
 
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.fillMaxWidth()
             ) {
-                OutlinedButton(onClick = { onAction(JugadorEvent.new) }) {
-                    Text("Limpiar")
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Icon(Icons.Default.Refresh, "Limpiar")
+                Button(
+                    onClick = onGuardar,
+                    enabled = state.nombres.isNotBlank(),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Guardar local y sync")
                 }
-
-                Spacer(modifier = Modifier.width(16.dp))
-
-                OutlinedButton(onClick = { scope.launch { saveJugador() } }) {
-                    Text("Guardar")
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Icon(Icons.Default.Edit, "Guardar")
+                Button(
+                    onClick = onSync,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Sync ahora")
                 }
+            }
+
+            if (loading) {
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            }
+        }
+
+        Divider()
+
+        Text("Jugadores registrados:")
+
+        LazyColumn(
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            items(state.jugadores) { jugador ->
+                JugadorRow(jugador = jugador)
             }
         }
     }
 }
+
+@Composable
+private fun JugadorRow(
+    jugador: Jugador
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+    ) {
+        Text("Remoto: ${jugador.remoteId ?: "-"}")
+        Text("Nombre: ${jugador.nombres}")
+        Text("Email: ${jugador.email ?: ""}")
+    }
+}
+

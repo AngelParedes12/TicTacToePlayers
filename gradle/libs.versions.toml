@@ -19,7 +19,10 @@ kotlinxSerializationJson = "1.6.3"
 junitKtx = "1.2.1"
 activityKtx = "1.10.1"
 roomKtx = "2.6.1"
-foundationVersion = "1.9.1"
+roomCommonJvm = "2.8.2"
+roomCompilerProcessingTesting = "2.8.3"
+media3CommonKtx = "1.8.0"
+foundationVersion = "1.9.4"
 
 
 [libraries]
@@ -52,6 +55,9 @@ androidx-material3 = { group = "androidx.compose.material3", name = "material3" 
 androidx-junit-ktx = { group = "androidx.test.ext", name = "junit-ktx", version.ref = "junitKtx" }
 androidx-activity-ktx = { group = "androidx.activity", name = "activity-ktx", version.ref = "activityKtx" }
 material3 = { module = "androidx.compose.material3:material3", version.ref = "material3" }
+androidx-room-common-jvm = { group = "androidx.room", name = "room-common-jvm", version.ref = "roomCommonJvm" }
+androidx-room-compiler-processing-testing = { group = "androidx.room", name = "room-compiler-processing-testing", version.ref = "roomCompilerProcessingTesting" }
+androidx-media3-common-ktx = { group = "androidx.media3", name = "media3-common-ktx", version.ref = "media3CommonKtx" }
 androidx-compose-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "foundationVersion" }
 
 

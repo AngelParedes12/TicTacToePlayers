@@ -2,77 +2,101 @@ package edu.ucne.composedemo.Di
 
 import android.content.Context
 import androidx.room.Room
+import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import javax.inject.Singleton
-import edu.ucne.composedemo.Data.Local.Jugador.Entities.Database.JugadorDb
-import edu.ucne.composedemo.Data.Local.Jugador.Entities.Dao.JugadorDao
-import edu.ucne.composedemo.Data.Local.Partidas.Dao.PartidaDao
-import edu.ucne.composedemo.Data.Repository.JugadorRepositorylmpl
-import edu.ucne.composedemo.Data.Repository.PartidaRepositoryImpl
+import edu.ucne.composedemo.Data.Local.AppDb
+import edu.ucne.composedemo.Data.Local.Dao.JugadorDao
+import edu.ucne.composedemo.Data.Remote.JugadorRemoteDataSource
+import edu.ucne.composedemo.Data.Remote.JugadoresApiService
+import edu.ucne.composedemo.Data.Remote.TicTacToeApi
+import edu.ucne.composedemo.Data.Repository.JugadorRepositoryImpl
+import edu.ucne.composedemo.Data.Repository.MovimientosRepositoryImpl
+import edu.ucne.composedemo.Data.Repository.PartidasRepositoryImpl
 import edu.ucne.composedemo.Domain.Repository.JugadorRepository
-import edu.ucne.composedemo.Domain.Repository.PartidaRepository
-import edu.ucne.composedemo.Domain.useCase.UseCaseJugador.EliminarJugadorUseCase
-import edu.ucne.composedemo.Domain.useCase.UseCaseJugador.GuardarJugadorUseCase
-import edu.ucne.composedemo.Domain.useCase.UseCaseJugador.JugadorUseCases
-import edu.ucne.composedemo.Domain.useCase.UseCaseJugador.ObtenerJugadorUseCase
-import edu.ucne.composedemo.Domain.useCase.UseCaseJugador.ObtenerJugadoresUseCase
-import edu.ucne.composedemo.Domain.useCase.UseCaseJugador.ValidarJugadorUseCase
-import edu.ucne.composedemo.Domain.useCase.PartidaUseCases
-import edu.ucne.composedemo.Domain.useCase.ListarPartidasUseCase
-import edu.ucne.composedemo.Domain.useCase.ObtenerPartidaUseCase
-import edu.ucne.composedemo.Domain.useCase.GuardarPartidaUseCase
-import edu.ucne.composedemo.Domain.useCase.EliminarPartidaUseCase
+import edu.ucne.composedemo.Domain.Repository.MovimientosRepository
+import edu.ucne.composedemo.Domain.Repository.PartidasRepository
+import edu.ucne.composedemo.Domain.useCase.*
+import javax.inject.Singleton
+import kotlinx.serialization.json.Json
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
+import retrofit2.Retrofit
+import retrofit2.converter.scalars.ScalarsConverterFactory
 
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {
-
     @Provides
     @Singleton
-    fun provideDb(@ApplicationContext appContext: Context): JugadorDb =
-        Room.databaseBuilder(appContext, JugadorDb::class.java, "JugadorDb")
-            .fallbackToDestructiveMigration()
-            .build()
-
-    @Provides
-    fun provideJugadorDao(db: JugadorDb): JugadorDao = db.JugadorDao()
-
-    @Provides
-    fun providePartidaDao(db: JugadorDb): PartidaDao = db.PartidaDao()
-
-    @Provides
-    @Singleton
-    fun provideJugadorRepository(dao: JugadorDao): JugadorRepository =
-        JugadorRepositorylmpl(dao)
-
-    @Provides
-    @Singleton
-    fun providePartidaRepository(
-        partidaDao: PartidaDao,
-        jugadorDao: JugadorDao
-    ): PartidaRepository = PartidaRepositoryImpl(partidaDao, jugadorDao)
-
-    @Provides
-    fun provideJugadorUseCases(repository: JugadorRepository): JugadorUseCases {
-        val validar = ValidarJugadorUseCase(repository)
-        return JugadorUseCases(
-            validarJugador = validar,
-            guardarJugador = GuardarJugadorUseCase(repository, validar),
-            eliminarJugador = EliminarJugadorUseCase(repository),
-            obtenerJugador = ObtenerJugadorUseCase(repository),
-            obtenerJugadores = ObtenerJugadoresUseCase(repository)
-        )
+    fun provideOkHttp(): OkHttpClient {
+        val log = HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY)
+        return OkHttpClient.Builder().addInterceptor(log).build()
     }
 
     @Provides
-    fun providePartidaUseCases(repo: PartidaRepository) = PartidaUseCases(
-        listarPartidas = ListarPartidasUseCase(repo),
-        obtenerPartida = ObtenerPartidaUseCase(repo),
-        guardarPartida = GuardarPartidaUseCase(repo),
-        eliminarPartida = EliminarPartidaUseCase(repo)
+    @Singleton
+    fun provideRetrofit(client: OkHttpClient): Retrofit =
+        Retrofit.Builder()
+            .baseUrl("https://gestionhuacalesapi.azurewebsites.net/")
+            .client(client)
+            .addConverterFactory(ScalarsConverterFactory.create())
+            .addConverterFactory(Json.asConverterFactory("application/json".toMediaType()))
+            .build()
+
+    @Provides
+    @Singleton
+    fun provideApi(retrofit: Retrofit): TicTacToeApi =
+        retrofit.create(TicTacToeApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideMovimientosRepo(api: TicTacToeApi): MovimientosRepository =
+        MovimientosRepositoryImpl(api)
+
+    @Provides
+    @Singleton
+    fun providePartidasRepository(api: TicTacToeApi): PartidasRepository =
+        PartidasRepositoryImpl(api)
+
+    // Offline-First Jugadores
+    @Provides
+    @Singleton
+    fun provideDb(@ApplicationContext c: Context): AppDb =
+        Room.databaseBuilder(c, AppDb::class.java, "app.db").build()
+
+    @Provides
+    fun provideJugadorDao(db: AppDb): JugadorDao = db.jugadorDao()
+
+    @Provides
+    @Singleton
+    fun provideApiJugadores(retrofit: Retrofit): JugadoresApiService =
+        retrofit.create(JugadoresApiService::class.java)
+
+    @Provides
+    @Singleton
+    fun provideJugadorRemote(api: JugadoresApiService) = JugadorRemoteDataSource(api)
+
+    @Provides
+    @Singleton
+    fun provideJugadorRepository(
+        dao: JugadorDao,
+        remote: JugadorRemoteDataSource
+    ): JugadorRepository = JugadorRepositoryImpl(dao, remote)
+
+    @Provides
+    @Singleton
+    fun provideJugadorUseCases(repo: JugadorRepository) = JugadorUseCases(
+        guardarLocal = GuardarJugadorLocalUseCase(repo),
+        obtenerTodos = ObtenerJugadoresUseCase(repo),
+        obtener = ObtenerJugadorUseCase(repo),
+        eliminar = EliminarJugadorUseCase(repo),
+        validar = ValidarJugadorUseCase(),
+        postPendientes = PostPendientesUseCase(repo),
+        syncFull = SyncJugadoresUseCase(repo)
     )
 }

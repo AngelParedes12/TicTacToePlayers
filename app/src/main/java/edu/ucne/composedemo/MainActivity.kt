@@ -1,53 +1,29 @@
-package edu.ucne.jugadorestictactoe
+package edu.ucne.composedemo
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.material3.MaterialTheme
+import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
-import androidx.navigation.NavType
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
-import edu.ucne.jugadorestictactoe.Presentation.Jugador.JugadorListScreen
-import edu.ucne.jugadorestictactoe.Presentation.Jugador.JugadorScreen
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.Modifier
+import dagger.hilt.android.AndroidEntryPoint
+import edu.ucne.composedemo.Presentation.Jugador.JugadorScreen
+import edu.ucne.composedemo.ui.theme.TicTacToePlayersTheme
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         setContent {
-            MaterialTheme {
-                Surface {
-                    val navController = rememberNavController()
-
-                    NavHost(
-                        navController = navController,
-                        startDestination = "jugadores"
-                    ) {
-                        composable("jugadores") {
-                            JugadorListScreen(
-                                goToJugadores = { id ->
-                                    navController.navigate("jugador/$id")
-                                },
-                                createJugador = {
-                                    navController.navigate("jugador/0")
-                                }
-                            )
-                        }
-                        composable(
-                            route = "jugador/{jugadorId}",
-                            arguments = listOf(
-                                navArgument("jugadorId") { type = NavType.IntType }
-                            )
-                        ) { backStackEntry ->
-                            val jugadorId = backStackEntry.arguments?.getInt("jugadorId")
-                            JugadorScreen(
-                                jugadorId = jugadorId,
-                                goback = { navController.popBackStack() }
-                            )
-                        }
-                    }
+            TicTacToePlayersTheme {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    JugadorScreen()
                 }
             }
         }
