@@ -1,4 +1,4 @@
-package edu.ucne.composedemo.Data.Local.Entities
+package edu.ucne.composedemo.Data.Local.Jugador.Entities
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey

@@ -1,4 +1,4 @@
-package edu.ucne.composedemo.Domain.useCase
+package edu.ucne.composedemo.Domain.useCase.UseCaseJugador
 data class JugadorUseCases(
     val validarJugador: ValidarJugadorUseCase,
     val guardarJugador: GuardarJugadorUseCase,

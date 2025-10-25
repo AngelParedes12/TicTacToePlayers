@@ -1,7 +1,7 @@
 package edu.ucne.composedemo.Data.Repository
 
-import edu.ucne.composedemo.Data.Local.Dao.JugadorDao
-import edu.ucne.composedemo.Data.Local.Entities.JugadorEntity
+import edu.ucne.composedemo.Data.Local.Jugador.Entities.Dao.JugadorDao
+import edu.ucne.composedemo.Data.Local.Jugador.Entities.JugadorEntity
 import edu.ucne.composedemo.Data.mappers.toDomain
 import edu.ucne.composedemo.Data.mappers.toEntity
 import edu.ucne.composedemo.Domain.Model.Jugador
