@@ -1,4 +1,4 @@
-package edu.ucne.composedemo.Domain.useCase
+package edu.ucne.composedemo.Domain.useCase.UseCaseJugador
 
 import edu.ucne.composedemo.Domain.Repository.JugadorRepository
 
